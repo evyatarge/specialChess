@@ -1,4 +1,4 @@
-# checkers
+# Special Chess 
 
 ## Project setup
 ```
