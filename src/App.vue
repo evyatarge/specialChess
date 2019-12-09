@@ -13,6 +13,9 @@
   import { pieces } from "./constants"
   import Vue from "vue"
 
+  let WHITE = "white"
+  let BLACK = "black"
+
   export default {
     name: 'app',
     components: {
@@ -24,6 +27,7 @@
         letters : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
         numbers : [8,7,6,5,4,3,2,1],
         piecesLocations: {},
+        turn: WHITE,
         isPicked: false,
         pickedPieceUnicode: '',
         pickedPieceLocation: '',
@@ -32,16 +36,17 @@
 
     methods:{
       clickCellHandle({index, letter}, event){
-        if(this.isPicked){
+        if(this.isPicked && this.notOverrideSameColor(index,letter)){
           Vue.set(this.piecesLocations, index+letter, this.pickedPieceUnicode)
           delete this.piecesLocations[this.pickedPieceLocation]
           this.resetPickedData()
+          this.turnChange()
         }
-        else if(this.isPieceClickedFirst(event)){
+        // !this.isPicked => use for "Touch-move rule"
+        else if(!this.isPicked && this.isPieceClickedFirst(event) && this.isCurrentTurn(index,letter)){
           this.isPicked = true
           this.pickedPieceUnicode = event.target.innerText
           this.pickedPieceLocation = index+letter
-
         }
       },
 
@@ -53,6 +58,34 @@
         this.pickedPieceUnicode = ''
         this.pickedPieceLocation = ''
         this.isPicked = false
+      },
+
+      turnChange(){
+        if(this.turn === WHITE){
+          this.turn = BLACK
+        }
+        else{
+          this.turn = WHITE
+        }
+      },
+
+      notOverrideSameColor(index, letter){
+        return (this.turn === WHITE && !this.isWhite(this.piecesLocations[index+letter])) ||
+                (this.turn === BLACK && !this.isBlack(this.piecesLocations[index+letter]))
+      },
+
+      isBlack(piece){
+        return piece === pieces.B_KING || piece === pieces.B_QUEEN || piece === pieces.B_PAWN ||
+          piece === pieces.B_ROOK || piece === pieces.B_BISHOP || piece === pieces.B_KNIGHT
+      },
+      isWhite(piece){
+        return piece === pieces.W_KING || piece === pieces.W_QUEEN || piece === pieces.W_PAWN ||
+          piece === pieces.W_ROOK || piece === pieces.W_BISHOP || piece === pieces.W_KNIGHT
+      },
+
+      isCurrentTurn(index,letter){
+        return (this.turn === BLACK && this.isBlack(this.piecesLocations[index+letter])) ||
+                (this.turn === WHITE && this.isWhite(this.piecesLocations[index+letter]))
       },
 
     },
@@ -74,7 +107,6 @@
           '8b': pieces.B_KNIGHT, '8g': pieces.B_KNIGHT,
 
         }
-
         // init all Pawns
         this.letters.forEach((letter)=>{
             let whiteLocation = '2'+letter
