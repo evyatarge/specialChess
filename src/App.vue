@@ -1,11 +1,17 @@
 <template>
     <div id="app">
-        <Board :letters="letters" :numbers="numbers" :pieces="initBoard" id="game-board"/>
+        <Board :letters="letters"
+               :numbers="numbers"
+               :pieces="piecesLocations"
+               @cell-clicked="clickCellHandle"
+               id="game-board"/>
     </div>
 </template>
 
 <script>
   import Board from './components/Board.vue'
+  import { pieces } from "./constants"
+  import Vue from "vue"
 
   export default {
     name: 'app',
@@ -17,25 +23,55 @@
       return {
         letters : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
         numbers : [8,7,6,5,4,3,2,1],
+        piecesLocations: {},
+        isPicked: false,
+        pickedPieceUnicode: '',
+        pickedPieceLocation: '',
       }
     },
 
-    computed: {
-      initBoard(){
-        let pieces = {
+    methods:{
+      clickCellHandle({index, letter}, event){
+        if(this.isPicked){
+          Vue.set(this.piecesLocations, index+letter, this.pickedPieceUnicode)
+          delete this.piecesLocations[this.pickedPieceLocation]
+          this.resetPickedData()
+        }
+        else if(this.isPieceClickedFirst(event)){
+          this.isPicked = true
+          this.pickedPieceUnicode = event.target.innerText
+          this.pickedPieceLocation = index+letter
+
+        }
+      },
+
+      isPieceClickedFirst(event){
+        return !(event.target.firstChild.innerText === '' && !this.isPicked)
+      },
+
+      resetPickedData(){
+        this.pickedPieceUnicode = ''
+        this.pickedPieceLocation = ''
+        this.isPicked = false
+      },
+
+    },
+
+    created() {
+        let allPieces = {
           //Whites
-          '1e': '9812',//King
-          '1d': '9813',//Queen
-          '1a': '9814', '1h': '9814',//Rook
-          '1c': '9815', '1f': '9815',//Bishop
-          '1b': '9816', '1g': '9816',//Knight
+          '1e': pieces.W_KING,
+          '1d': pieces.W_QUEEN,
+          '1a': pieces.W_ROOK, '1h': pieces.W_ROOK,
+          '1c': pieces.W_BISHOP, '1f': pieces.W_BISHOP,
+          '1b': pieces.W_KNIGHT, '1g': pieces.W_KNIGHT,
 
           //Blacks
-          '8e': '9818',//King
-          '8d': '9819',//Queen
-          '8a': '9820', '8h': '9820',//Rook
-          '8c': '9821', '8f': '9821',//Bishop
-          '8b': '9822', '8g': '9822',//Knight
+          '8e': pieces.B_KING,
+          '8d': pieces.B_QUEEN,
+          '8a': pieces.B_ROOK, '8h': pieces.B_ROOK,
+          '8c': pieces.B_BISHOP, '8f': pieces.B_BISHOP,
+          '8b': pieces.B_KNIGHT, '8g': pieces.B_KNIGHT,
 
         }
 
@@ -44,13 +80,12 @@
             let whiteLocation = '2'+letter
             let blackLocation = '7'+letter
 
-            pieces[whiteLocation] = '9817'
-            pieces[blackLocation] = '9823'
+            allPieces[whiteLocation] = pieces.W_PAWN
+            allPieces[blackLocation] = pieces.B_PAWN
           }
         )
 
-        return pieces
-      }
+        this.piecesLocations = allPieces
     }
   }
 </script>

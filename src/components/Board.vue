@@ -1,19 +1,19 @@
 <template>
-    <span class="board-container">
+    <div class="board-container">
         <div class="numbers-container"><div v-for="num in numbers" :key="num">{{ num }}</div></div>
         <div style="margin-right: auto;">
             <span class="letters-container"><span v-for="letter in letters" :key="letter">{{ letter }}</span></span>
             <div class="board">
                 <div v-for="index in numbers" :key="index" class="row">
-                    <span v-for="letter in letters" :key="letter" class="cell">
-                        <span class="cell-content" draggable="true">
-                            {{ pieces[index+letter] !== undefined? String.fromCharCode(pieces[index+letter]) : ''}}
+                    <span v-for="letter in letters" :key="letter" :id="index+letter" class="cell" @click="cellClicked({index, letter}, $event)">
+                        <span class="cell-content">
+                            {{ pieces[index+letter] !== undefined ? pieces[index+letter] : ''}}
                         </span>
                     </span>
                 </div>
             </div>
         </div>
-    </span>
+    </div>
 </template>
 
 <script>
@@ -31,6 +31,11 @@
       },
     },
 
+    methods: {
+      cellClicked({index, letter}, event){
+        this.$emit('cell-clicked', {index: index, letter: letter}, event)
+      }
+    },
   }
 </script>
 
@@ -93,6 +98,10 @@
         flex: 8;
         font-size: 70px;
         border: transparent solid 1px;
+
+        .cell-content{
+            cursor: pointer;
+        }
     }
 
 </style>
