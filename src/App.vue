@@ -45,24 +45,19 @@
 
     methods:{
       clickCellHandle({index, letter}, event){
-        if(this.isPicked && this.notOverrideSameColor(index,letter)){
-          if(this.isLegalMovement(index, letter)) {
-            if(!this.isGameEnded(index,letter)) {
-              Vue.set(this.piecesLocations, index + letter, this.pickedPieceUnicode)
-              delete this.piecesLocations[this.pickedPieceLocation]
-              this.resetPickedData()
-              this.turnChange()
-            }
-            else{
-              this.initBoard()
-            }
+        if(this.isPicked && this.isLegalMovement(index, letter)){
+          if(!this.isGameEnded(index,letter)) {
+            Vue.set(this.piecesLocations, index + letter, this.pickedPieceUnicode)
+            delete this.piecesLocations[this.pickedPieceLocation]
+            this.resetPickedData()
+            this.turnChange()
           }
           else{
-            alert("This is not a legal movement for this piece")
+            this.initBoard()
           }
         }
         // !this.isPicked => use for "Touch-move rule"
-        else if(!this.isPicked && this.isPieceClickedFirst(event) && this.isCurrentTurn(index,letter)){
+        else if(!this.isPicked && this.isLegalPieceClicked(index, letter, event)){
           this.isPicked = true
           this.pickedPieceUnicode = event.target.innerText
           this.pickedPieceLocation = index+letter
@@ -78,15 +73,20 @@
         }
         return false
       },
-      releasePickedIfIsStuck(){// TODO consider if to make it global for any stuck state or add an option to release
+      releasePickedIfIsStuck(){
         if(this.pickedPieceUnicode===pieces.B_PAWN && this.getPickedIndex()===1 ||
               this.pickedPieceUnicode===pieces.W_PAWN && this.getPickedIndex()===8){
           this.resetPickedData()
         }
       },
 
-      isPieceClickedFirst(event){
-        return !(event.target.firstChild.innerText === '' && !this.isPicked)
+      isLegalPieceClicked(index, letter, event){
+        if(this.isCurrentTurn(index,letter)){
+          return !(event.target.firstChild.innerText === '' && !this.isPicked)
+        }
+        else{
+          return false
+        }
       },
 
       resetPickedData(){
@@ -124,28 +124,30 @@
       },
 
       isLegalMovement(destIndex, destLetter){
-        switch (this.pickedPieceUnicode) {
-          case pieces.W_PAWN:
-          case pieces.B_PAWN:
-            return this.pawnIsLegalMove(destIndex, destLetter)
-          case pieces.W_QUEEN:
-          case pieces.B_QUEEN:
-            return this.queenIsLegalMove(destIndex,destLetter)
-          case pieces.B_ROOK:
-          case pieces.W_ROOK:
-            return this.rookIsLegalMove(destIndex,destLetter)
-          case pieces.W_BISHOP:
-          case pieces.B_BISHOP:
-            return this.bishopIsLegalMove(destIndex,destLetter)
-          case pieces.W_KNIGHT:
-          case pieces.B_KNIGHT:
-            return this.knightIsLegalMove(destIndex,destLetter)
-          case pieces.W_KING:
-          case pieces.B_KING:
-            return this.kingIsLegalMove(destIndex,destLetter)
-          default:
-            alert("Error - legal check without match piece !")
-            return true
+        if(this.notOverrideSameColor(destIndex,destLetter)) {
+          switch (this.pickedPieceUnicode) {
+            case pieces.W_PAWN:
+            case pieces.B_PAWN:
+              return this.pawnIsLegalMove(destIndex, destLetter)
+            case pieces.W_QUEEN:
+            case pieces.B_QUEEN:
+              return this.queenIsLegalMove(destIndex, destLetter)
+            case pieces.B_ROOK:
+            case pieces.W_ROOK:
+              return this.rookIsLegalMove(destIndex, destLetter)
+            case pieces.W_BISHOP:
+            case pieces.B_BISHOP:
+              return this.bishopIsLegalMove(destIndex, destLetter)
+            case pieces.W_KNIGHT:
+            case pieces.B_KNIGHT:
+              return this.knightIsLegalMove(destIndex, destLetter)
+            case pieces.W_KING:
+            case pieces.B_KING:
+              return this.kingIsLegalMove(destIndex, destLetter)
+            default:
+              console.error("Error - legal check without match piece !")
+              return false
+          }
         }
       },
 
@@ -189,15 +191,23 @@
                 this.isLegalVertically(destIndex, destLetter, this.maxMove)
       },
 
-      knightIsLegalMove(destIndex,destLetter){
-        if(destIndex && destLetter){
-          return true //TODO - need to implement as the regular knight movement rule
-        }
-      },
-
+      // ♚
       kingIsLegalMove(destIndex,destLetter){
         return this.isLegalVertically(destIndex, destLetter, this.maxMove) ||
                 this.isLegalHorizontally(destIndex, destLetter, this.maxMove)
+      },
+
+      // ♞
+      knightIsLegalMove(destIndex,destLetter){
+        let pickedIndex = this.getPickedIndex()
+        let destLetterIndex = this.letters.indexOf(destLetter)
+        let pickedLetterIndex = this.letters.indexOf(this.getPickedLetter())
+
+        let lettersMovement = Math.abs(destLetterIndex - pickedLetterIndex)
+        let numbersMovement = Math.abs(destIndex - pickedIndex)
+
+        return (lettersMovement===1 && numbersMovement===2) ||
+                (lettersMovement===2 && numbersMovement===1)
       },
 
       // VERTICAL
