@@ -5,7 +5,12 @@
             <span class="letters-container"><span v-for="letter in letters" :key="letter">{{ letter }}</span></span>
             <div class="board">
                 <div v-for="index in numbers" :key="index" class="row">
-                    <span v-for="letter in letters" :key="letter" :id="index+letter" class="cell" @click="cellClicked({index, letter}, $event)">
+                    <span v-for="letter in letters"
+                          :key="letter"
+                          :id="index+letter"
+                          class="cell"
+                          :style="{border: pickedCell===(index+letter)? '1px solid red' : 'transparent'}"
+                          @click="cellClicked({index, letter}, $event)">
                         <span class="cell-content">
                             {{ pieces[index+letter] !== undefined ? pieces[index+letter] : ''}}
                         </span>
@@ -28,6 +33,9 @@
       },
       numbers: {
         type: Array,
+      },
+      pickedCell: {
+        type: String,
       },
     },
 
