@@ -1,7 +1,10 @@
 <template>
     <div id="app">
-        <button @click="initBoard">Restart Game</button>
-        Current Turn is:  <div :style="{backgroundColor: this.turn}" class="turn-sign"></div>
+        <div class="header-container">
+            <button @click="restartGame">Restart Game</button>
+            <span class="pipe"></span>
+            Current Turn  <div :style="{backgroundColor: this.turn}" class="turn-sign"></div>
+        </div>
         <Board :letters="letters"
                :numbers="numbers"
                :pieces="piecesLocations"
@@ -311,7 +314,12 @@
         )
 
         this.piecesLocations = allPieces
+      },
+
+      restartGame(){
+        this.initBoard()
         this.turn = WHITE
+        this.resetPickedData()
       }
     },
 
@@ -330,19 +338,34 @@
         color: #862e11;
         margin-top: 30px;
 
-        button{
-            background-color: transparent;
-            border-radius: 5px;
+        .header-container {
+            margin-bottom: 10px;
+            color: black;
+            button {
+                background-color: transparent;
+                border-radius: 5px;
+                font-size: inherit;
+                padding: 4px 10px;
+            }
 
-            margin-right: 40%;
-        }
+            .pipe {
+                border: 0.5px solid rgba(128, 128, 128, 0.75);
+                margin: 0 4px 0 13px;
+                padding: 7px 0 9px 0;
 
-        .turn-sign{
-            display: inline-block;
-            height: 20px;
-            width: 20px;
-            border: solid 1px black;
-            border-radius: 100px;
+            }
+
+            .turn-sign {
+                display: inline-block;
+                height: 20px;
+                width: 20px;
+                /*border: solid 1px black;*/
+                border-radius: 100px;
+                margin-bottom: -5px;
+
+                border: 2px outset buttonface;
+                border-image: initial;
+            }
         }
     }
 
