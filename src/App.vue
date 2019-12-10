@@ -59,7 +59,7 @@
             this.turnChange()
           }
           else{
-            this.initBoard()
+            this.restartGame()
           }
         }
         else if(!this.isPicked && this.isLegalPieceClicked(index, letter, event)){
