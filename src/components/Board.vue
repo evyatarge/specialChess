@@ -1,7 +1,7 @@
 <template>
     <div class="board-container">
-        <div class="numbers-container"><div v-for="num in numbers" :key="num">{{ num }}</div></div>
-        <div style="margin-right: auto;">
+        <div class="numbers-container left"><div v-for="num in numbers" :key="num">{{ num }}</div></div>
+        <div>
             <span class="letters-container"><span v-for="letter in letters" :key="letter">{{ letter }}</span></span>
             <div class="board">
                 <div v-for="index in numbers" :key="index" class="row">
@@ -17,7 +17,9 @@
                     </span>
                 </div>
             </div>
+            <span class="letters-container"><span v-for="letter in letters" :key="letter">{{ letter }}</span></span>
         </div>
+        <div class="numbers-container right"><div v-for="num in numbers" :key="num">{{ num }}</div></div>
     </div>
 </template>
 
@@ -65,8 +67,14 @@
         justify-content: space-around;
         padding-top: 20px;
 
-        margin-left: auto;
-        margin-right: 0;
+        &.left {
+            margin-left: auto;
+            margin-right: 0;
+        }
+        &.right{
+            margin-left: 0;
+            margin-right: auto;
+        }
     }
     .letters-container {
         line-height: 34px;

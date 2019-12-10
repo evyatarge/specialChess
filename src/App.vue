@@ -48,7 +48,10 @@
 
     methods:{
       clickCellHandle({index, letter}, event){
-        if(this.isPicked && this.isLegalMovement(index, letter)){
+        if(this.isPicked && this.isClickSamePieceAgain(index,letter)){
+          this.resetPickedData()
+        }
+        else if(this.isPicked && this.isLegalMovement(index, letter)){
           if(!this.isGameEnded(index,letter)) {
             Vue.set(this.piecesLocations, index + letter, this.pickedPieceUnicode)
             delete this.piecesLocations[this.pickedPieceLocation]
@@ -59,7 +62,6 @@
             this.initBoard()
           }
         }
-        // !this.isPicked => use for "Touch-move rule"
         else if(!this.isPicked && this.isLegalPieceClicked(index, letter, event)){
           this.isPicked = true
           this.pickedPieceUnicode = event.target.innerText
@@ -68,6 +70,7 @@
           this.releasePickedIfIsStuck()
         }
       },
+
       isGameEnded(index, letter){
         if(this.piecesLocations[index+letter] === pieces.W_QUEEN ||
                 this.piecesLocations[index+letter] === pieces.B_QUEEN){
@@ -76,6 +79,7 @@
         }
         return false
       },
+
       releasePickedIfIsStuck(){
         if(this.pickedPieceUnicode===pieces.B_PAWN && this.getPickedIndex()===1 ||
               this.pickedPieceUnicode===pieces.W_PAWN && this.getPickedIndex()===8){
@@ -90,6 +94,10 @@
         else{
           return false
         }
+      },
+
+      isClickSamePieceAgain(index, letter){
+        return (index===this.getPickedIndex() && letter===this.getPickedLetter())
       },
 
       resetPickedData(){
