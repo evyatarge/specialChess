@@ -44,10 +44,8 @@
             display: inline-block;
             height: 20px;
             width: 20px;
-            /*border: solid 1px black;*/
             border-radius: 100px;
             margin-bottom: -5px;
-
             border: 2px outset buttonface;
             border-image: initial;
         }

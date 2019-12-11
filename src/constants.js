@@ -1,4 +1,4 @@
-export const pieces = {
+export const PIECES = {
   //Whites
   W_KING: String.fromCharCode('9812'),
   W_QUEEN: String.fromCharCode('9813'),
@@ -17,6 +17,16 @@ export const pieces = {
 
 }
 
+export const WHITES = [
+  PIECES.W_KING, PIECES.W_QUEEN, PIECES.W_ROOK,
+  PIECES.W_BISHOP, PIECES.W_KNIGHT, PIECES.W_PAWN,
+]
+export const BLACKS = [
+  PIECES.B_KING, PIECES.B_QUEEN, PIECES.B_ROOK,
+  PIECES.B_BISHOP, PIECES.B_KNIGHT, PIECES.B_PAWN,
+]
 
-export const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-export const numbers = [8,7,6,5,4,3,2,1]
+export const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+export const NUMBERS = [8,7,6,5,4,3,2,1]
+
+export const MAX_QUEEN_MOVEMENT = 2, MAX_PAWN_MOVEMENT = 2

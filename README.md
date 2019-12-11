@@ -22,7 +22,7 @@ The following moves are supported:
 
 * KING - can move any number of squares vertically and horizontally
 * QUEEN - can move one or two squares in any direction
-* KNIGHT - move the same as they do in regular chess, they are also the only ones which can "jump" to a new square on the board
+* KNIGHT - move the same as they do in regular chess
 * BISHOP - can move any number of squares vertically and diagonally
 * ROOK - can move any number of squares diagonally
 * PAWN - can move one or two squares vertically & forward

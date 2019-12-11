@@ -25,7 +25,7 @@
 
 <script>
 
-  import { letters, numbers } from "../constants"
+  import { LETTERS, NUMBERS } from "../constants"
 
   export default {
     name: "Board",
@@ -40,8 +40,8 @@
 
     data(){
       return{
-        letters: letters,
-        numbers: numbers,
+        letters: LETTERS,
+        numbers: NUMBERS,
       }
     },
 

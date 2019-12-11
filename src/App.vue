@@ -11,11 +11,10 @@
 <script>
   import Board from './components/Board'
   import Header from './components/Header'
-  import { pieces, letters } from "./constants"
+  import { PIECES, LETTERS, WHITES, BLACKS, MAX_QUEEN_MOVEMENT, MAX_PAWN_MOVEMENT } from "./constants"
 
   const WHITE = "white"
   const BLACK = "black"
-  const maxMove = letters.length
 
   export default {
     name: 'app',
@@ -42,46 +41,63 @@
         return this.pickedPieceLocation.charAt(1)
       },
       pickedLetterIndex(){
-        return letters.indexOf(this.pickedLetter)
-      }
+        return LETTERS.indexOf(this.pickedLetter)
+      },
+      isWhiteTurn(){
+        return this.turn === WHITE
+      },
+      isBlackTurn(){
+        return this.turn === BLACK
+      },
     },
 
     methods:{
       clickCellHandle({index, letter}){
-        let pieceAtLocation = this.piecesLocations[index+letter]
-
-        if(this.isClickSamePieceAgain(index,letter)){
-          this.resetPickedData()
+        if(!this.isPicked){
+          this.pick(index,letter)
         }
-        else if(this.isPicked && this.isLegalMovement(index, letter)){
-          if(!this.isGameEnded(pieceAtLocation)) {
-            this.movePieceTo(index, letter)
+        else {
+          if(this.isClickSamePieceTwice(index,letter)){
             this.resetPickedData()
-            this.switchTurn()
           }
-          else{
-            let message = "GAME OVER ! \n "+this.turn.toUpperCase()+" is the winner! \n Do you want to start a new game?"
-            confirm(message)? this.restartGame() : this.movePieceTo(index,letter)
-          }
-        }
-        else if(!this.isPicked && this.isCurrentTurn(pieceAtLocation)){
-          this.isPicked = true
-          this.pickedPieceUnicode = pieceAtLocation
-          this.pickedPieceLocation = index+letter
+          this.putDownPickedPiece(index,letter)
         }
       },
 
-      isGameEnded(targetPiece){
-        return targetPiece === pieces.W_QUEEN || targetPiece === pieces.B_QUEEN;
+      pick(index, letter){
+        if (this.pieceBelongsToPlayer(this.piecesLocations[index+letter])) {
+          this.isPicked = true
+          this.pickedPieceUnicode = this.piecesLocations[index+letter]
+          this.pickedPieceLocation = index + letter
+        }
+      },
 
+      putDownPickedPiece(index, letter){
+        if(this.isLegalMovement(index, letter)) {
+          if (!this.doesMoveEndTheGame(this.piecesLocations[index + letter])) {
+            this.movePieceTo(index, letter)
+          }
+          else {
+            this.endGame(index,letter)
+          }
+        }
+      },
+      doesMoveEndTheGame(targetPiece){
+        return targetPiece === PIECES.W_QUEEN || targetPiece === PIECES.B_QUEEN;
+      },
+      endGame(index,letter){
+        const message = `GAME OVER ! \n ${this.turn.toUpperCase()} is the winner! \n Do you want to start a new game?`
+        confirm(message) ? this.restartGame() : this.movePieceTo(index, letter)
       },
 
       movePieceTo(index, letter){
         this.piecesLocations[index+letter] = this.pickedPieceUnicode
         delete this.piecesLocations[this.pickedPieceLocation]
+        this.resetPickedData()
+        this.switchTurn()
       },
 
-      isClickSamePieceAgain(index, letter){
+      isClickSamePieceTwice(index, letter){
         return this.isPicked &&
                 index===this.pickedIndex &&
                 letter===this.pickedLetter
@@ -94,48 +110,46 @@
       },
 
       switchTurn(){
-        this.turn = this.turn===WHITE? BLACK : WHITE
+        this.turn = this.isWhiteTurn? BLACK : WHITE
       },
 
       notOverrideSameColor(targetPiece){
-        return (this.turn === WHITE && !this.isWhite(targetPiece)) ||
-                (this.turn === BLACK && !this.isBlack(targetPiece))
+        return (this.isWhiteTurn && !this.isWhite(targetPiece)) ||
+                (this.isBlackTurn && !this.isBlack(targetPiece))
       },
 
       isBlack(piece){
-        return piece === pieces.B_KING || piece === pieces.B_QUEEN || piece === pieces.B_PAWN ||
-                piece === pieces.B_ROOK || piece === pieces.B_BISHOP || piece === pieces.B_KNIGHT
+        return BLACKS.includes(piece)
       },
       isWhite(piece){
-        return piece === pieces.W_KING || piece === pieces.W_QUEEN || piece === pieces.W_PAWN ||
-                piece === pieces.W_ROOK || piece === pieces.W_BISHOP || piece === pieces.W_KNIGHT
+        return  WHITES.includes(piece)
       },
 
-      isCurrentTurn(piece){
-        return (this.turn === BLACK && this.isBlack(piece)) ||
-                (this.turn === WHITE && this.isWhite(piece))
+      pieceBelongsToPlayer(piece){
+        return !!piece && (this.isBlackTurn && this.isBlack(piece)) ||
+                            (this.isWhiteTurn && this.isWhite(piece))
       },
 
       isLegalMovement(destIndex, destLetter){
         if(this.notOverrideSameColor(this.piecesLocations[destIndex+destLetter])) {
           switch (this.pickedPieceUnicode) {
-            case pieces.W_PAWN:
-            case pieces.B_PAWN:
+            case PIECES.W_PAWN:
+            case PIECES.B_PAWN:
               return this.pawnIsLegalMove(destIndex, destLetter)
-            case pieces.W_QUEEN:
-            case pieces.B_QUEEN:
+            case PIECES.W_QUEEN:
+            case PIECES.B_QUEEN:
               return this.queenIsLegalMove(destIndex, destLetter)
-            case pieces.B_ROOK:
-            case pieces.W_ROOK:
+            case PIECES.B_ROOK:
+            case PIECES.W_ROOK:
               return this.rookIsLegalMove(destIndex, destLetter)
-            case pieces.W_BISHOP:
-            case pieces.B_BISHOP:
+            case PIECES.W_BISHOP:
+            case PIECES.B_BISHOP:
               return this.bishopIsLegalMove(destIndex, destLetter)
-            case pieces.W_KNIGHT:
-            case pieces.B_KNIGHT:
+            case PIECES.W_KNIGHT:
+            case PIECES.B_KNIGHT:
               return this.knightIsLegalMove(destIndex, destLetter)
-            case pieces.W_KING:
-            case pieces.B_KING:
+            case PIECES.W_KING:
+            case PIECES.B_KING:
               return this.kingIsLegalMove(destIndex, destLetter)
           }
         }
@@ -143,54 +157,67 @@
 
       // All legal movements
       pawnIsLegalMove(destIndex, destLetter){
-        if(this.isVerticalMove(destLetter) && this.isWayFreeVertical(destIndex)) {
-          if (this.turn === WHITE) {
-            return this.pickedIndex + 1 === destIndex || this.pickedIndex + 2 === destIndex
+        const isAllowedRange = Math.abs(this.pickedIndex-destIndex) <= MAX_PAWN_MOVEMENT
+        if(this.isVerticalMove(destLetter) && this.isWayFreeVertical(destIndex) && isAllowedRange) {
+          if (this.isWhiteTurn) {
+            return this.pickedIndex < destIndex
           }
           else {// Black turn
-            return this.pickedIndex - 1 === destIndex || this.pickedIndex - 2 === destIndex
+            return this.pickedIndex > destIndex
           }
         }
         return false
       },
 
       queenIsLegalMove(destIndex, destLetter){
-        return this.isLegalVertically(destIndex, destLetter, 2) ||
-                this.isLegalHorizontally(destIndex, destLetter, 2) ||
-                this.isLegalDiagonally(destIndex, destLetter, 2)
+        const isAllowedRange = this.rangeAllowedForQueen(destIndex, destLetter)
+
+        return isAllowedRange &&
+                (this.isLegalVertically(destIndex, destLetter) ||
+                this.isLegalHorizontally(destIndex, destLetter) ||
+                this.isLegalDiagonally(destIndex, destLetter))
+      },
+
+      rangeAllowedForQueen(destIndex, destLetter){
+        if(this.isHorizontalMove(destIndex)){
+          const destLetterIndex = LETTERS.indexOf(destLetter)
+          return Math.abs(destLetterIndex - this.pickedLetterIndex) <= MAX_QUEEN_MOVEMENT
+        }
+        else {
+          return Math.abs(destIndex - this.pickedIndex) <= MAX_QUEEN_MOVEMENT
+        }
       },
 
       rookIsLegalMove(destIndex,destLetter){
-        return this.isLegalDiagonally(destIndex, destLetter, maxMove)
+        return this.isLegalDiagonally(destIndex, destLetter)
       },
 
       bishopIsLegalMove(destIndex,destLetter){
-        return this.isLegalDiagonally(destIndex, destLetter, maxMove) ||
-                this.isLegalVertically(destIndex, destLetter, maxMove)
+        return this.isLegalDiagonally(destIndex, destLetter) ||
+                this.isLegalVertically(destIndex, destLetter)
       },
 
       // ♚
       kingIsLegalMove(destIndex,destLetter){
-        return this.isLegalVertically(destIndex, destLetter, maxMove) ||
-                this.isLegalHorizontally(destIndex, destLetter, maxMove)
+        return this.isLegalVertically(destIndex, destLetter) ||
+                this.isLegalHorizontally(destIndex, destLetter)
       },
 
       // ♞
       knightIsLegalMove(destIndex,destLetter){
-        let destLetterIndex = letters.indexOf(destLetter)
+        let destLetterIndex = LETTERS.indexOf(destLetter)
 
         let lettersMovement = Math.abs(destLetterIndex - this.pickedLetterIndex)
-        let numbersMovement = Math.abs(destIndex - this.pickedIndex)
+        let indexMovement = Math.abs(destIndex - this.pickedIndex)
 
-        return (lettersMovement===1 && numbersMovement===2) ||
-                (lettersMovement===2 && numbersMovement===1)
+        return (lettersMovement===1 && indexMovement===2) ||
+                (lettersMovement===2 && indexMovement===1)
       },
 
       // VERTICAL
-      isLegalVertically(destIndex, destLetter, stepsAllowed){
+      isLegalVertically(destIndex, destLetter){
         if(this.isVerticalMove(destLetter)) {
-          let isAllowedRange = Math.abs(this.pickedIndex - destIndex) <= stepsAllowed
-          return isAllowedRange && this.isWayFreeVertical(destIndex)
+          return this.isWayFreeVertical(destIndex)
         }
         return false
       },
@@ -209,11 +236,10 @@
       },
 
       // HORIZONTAL
-      isLegalHorizontally(destIndex, destLetter, stepsAllowed){
+      isLegalHorizontally(destIndex, destLetter){
         if(this.isHorizontalMove(destIndex)) {
-          let destLetterIndex = letters.indexOf(destLetter)
-          let isAllowedRange = Math.abs(destLetterIndex - this.pickedLetterIndex) <= stepsAllowed
-          return isAllowedRange && this.isWayFreeHorizontal(destLetterIndex)
+          let destLetterIndex = LETTERS.indexOf(destLetter)
+          return this.isWayFreeHorizontal(destLetterIndex)
         }
         return false
       },
@@ -221,7 +247,7 @@
         let minLetter = Math.min(destLetterIndex, this.pickedLetterIndex)
         let maxLetter = Math.max(destLetterIndex, this.pickedLetterIndex)
         for(let i = minLetter+1; i < maxLetter; i++){
-          if(this.piecesLocations[this.pickedIndex+letters[i]] !== undefined){
+          if(this.piecesLocations[this.pickedIndex+LETTERS[i]] !== undefined){
             return false
           }
         }
@@ -232,13 +258,10 @@
       },
 
       // DIAGONAL
-      isLegalDiagonally(destIndex, destLetter, stepsAllowed){
-        let destLetterIndex = letters.indexOf(destLetter)
+      isLegalDiagonally(destIndex, destLetter){
+        const destLetterIndex = LETTERS.indexOf(destLetter)
         if(this.isDiagonalMove(destIndex, destLetterIndex)) {
-          let isAllowedRange = Math.abs(destIndex - this.pickedIndex) <= stepsAllowed
-          if (isAllowedRange) {
-            return this.isWayFreeDiagonal(destIndex, destLetterIndex)
-          }
+          return this.isWayFreeDiagonal(destIndex, destLetterIndex)
         }
         return false
       },
@@ -255,7 +278,7 @@
         let letterToCheck = increaseAccordingly? minLetterToCheck : maxLetterToCheck
 
         while(indexToCheck < maxIndexToCheck){
-          if(this.piecesLocations[indexToCheck+letters[letterToCheck]] !== undefined){
+          if(this.piecesLocations[indexToCheck+LETTERS[letterToCheck]] !== undefined){
             return false
           }
           indexToCheck++
@@ -271,31 +294,29 @@
       },
 
       initBoard(){
-        let allPiecesLocations = {
+        const allPiecesLocations = {
           //Whites
-          '1e': pieces.W_KING,
-          '1d': pieces.W_QUEEN,
-          '1a': pieces.W_ROOK, '1h': pieces.W_ROOK,
-          '1c': pieces.W_BISHOP, '1f': pieces.W_BISHOP,
-          '1b': pieces.W_KNIGHT, '1g': pieces.W_KNIGHT,
+          '1e': PIECES.W_KING,
+          '1d': PIECES.W_QUEEN,
+          '1a': PIECES.W_ROOK, '1h': PIECES.W_ROOK,
+          '1c': PIECES.W_BISHOP, '1f': PIECES.W_BISHOP,
+          '1b': PIECES.W_KNIGHT, '1g': PIECES.W_KNIGHT,
 
           //Blacks
-          '8e': pieces.B_KING,
-          '8d': pieces.B_QUEEN,
-          '8a': pieces.B_ROOK, '8h': pieces.B_ROOK,
-          '8c': pieces.B_BISHOP, '8f': pieces.B_BISHOP,
-          '8b': pieces.B_KNIGHT, '8g': pieces.B_KNIGHT,
-
+          '8e': PIECES.B_KING,
+          '8d': PIECES.B_QUEEN,
+          '8a': PIECES.B_ROOK, '8h': PIECES.B_ROOK,
+          '8c': PIECES.B_BISHOP, '8f': PIECES.B_BISHOP,
+          '8b': PIECES.B_KNIGHT, '8g': PIECES.B_KNIGHT,
         }
         // init all Pawns
-        letters.forEach((letter)=>{
-            let whiteLocation = '2'+letter
-            let blackLocation = '7'+letter
+        for(let letter of LETTERS) {
+          let whiteLocation = '2' + letter
+          let blackLocation = '7' + letter
 
-            allPiecesLocations[whiteLocation] = pieces.W_PAWN
-            allPiecesLocations[blackLocation] = pieces.B_PAWN
-          }
-        )
+          allPiecesLocations[whiteLocation] = PIECES.W_PAWN
+          allPiecesLocations[blackLocation] = PIECES.B_PAWN
+        }
 
         this.piecesLocations = allPiecesLocations
       },
