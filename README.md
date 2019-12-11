@@ -20,13 +20,18 @@ npm run build
 
 The following moves are supported:
 
-* QUEENS - can move one or two squares in any direction
-* PAWNS - can move one or two squares vertically & forward
-* ROOKS - can move any number of squares diagonally
-* BISHOPS - can move any number of squares vertically and diagonally
-* KNIGHTS - move the same as they do in regular chess, they are also the only ones which can "jump" to a new square on the board
-* KINGS - can move any number of squares vertically and horizontally
+* KING - can move any number of squares vertically and horizontally
+* QUEEN - can move one or two squares in any direction
+* KNIGHT - move the same as they do in regular chess, they are also the only ones which can "jump" to a new square on the board
+* BISHOP - can move any number of squares vertically and diagonally
+* ROOK - can move any number of squares diagonally
+* PAWN - can move one or two squares vertically & forward
+
 * A move is legal only when it contains only empty squares and ends on an empty square or a square with an enemy piece on it, with the only exception of the Knight
+
+```
+* To release picked piece - click it again
+```
 
 #### Game End
 * The game ends when one of the queens dies, or when one of the players quits

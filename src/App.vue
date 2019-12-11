@@ -12,7 +12,6 @@
   import Board from './components/Board'
   import Header from './components/Header'
   import { pieces, letters } from "./constants"
-  import Vue from "vue"
 
   const WHITE = "white"
   const BLACK = "black"
@@ -35,60 +34,57 @@
       }
     },
 
+    computed:{
+      pickedIndex(){
+        return parseInt(this.pickedPieceLocation.charAt(0))
+      },
+      pickedLetter(){
+        return this.pickedPieceLocation.charAt(1)
+      },
+      pickedLetterIndex(){
+        return letters.indexOf(this.pickedLetter)
+      }
+    },
+
     methods:{
-      clickCellHandle({index, letter}, event){
+      clickCellHandle({index, letter}){
+        let pieceAtLocation = this.piecesLocations[index+letter]
+
         if(this.isClickSamePieceAgain(index,letter)){
           this.resetPickedData()
         }
         else if(this.isPicked && this.isLegalMovement(index, letter)){
-          if(!this.isGameEnded(index,letter)) {
-            Vue.set(this.piecesLocations, index + letter, this.pickedPieceUnicode)
-            delete this.piecesLocations[this.pickedPieceLocation]
+          if(!this.isGameEnded(pieceAtLocation)) {
+            this.movePieceTo(index, letter)
             this.resetPickedData()
-            this.turnChange()
+            this.switchTurn()
           }
           else{
-            this.restartGame()
+            let message = "GAME OVER ! \n "+this.turn.toUpperCase()+" is the winner! \n Do you want to start a new game?"
+            confirm(message)? this.restartGame() : this.movePieceTo(index,letter)
           }
         }
-        else if(!this.isPicked && this.isLegalPieceClicked(index, letter, event)){
+        else if(!this.isPicked && this.isCurrentTurn(pieceAtLocation)){
           this.isPicked = true
-          this.pickedPieceUnicode = event.target.innerText
+          this.pickedPieceUnicode = pieceAtLocation
           this.pickedPieceLocation = index+letter
-
-          this.releasePickedIfIsStuck()
         }
       },
 
-      isGameEnded(index, letter){
-        if(this.piecesLocations[index+letter] === pieces.W_QUEEN ||
-                this.piecesLocations[index+letter] === pieces.B_QUEEN){
-          alert("GAME ENDED! \n The "+this.turn.toUpperCase()+" is the winner!")
-          return true
-        }
-        return false
+      isGameEnded(targetPiece){
+        return targetPiece === pieces.W_QUEEN || targetPiece === pieces.B_QUEEN;
+
       },
 
-      releasePickedIfIsStuck(){
-        if(this.pickedPieceUnicode===pieces.B_PAWN && this.getPickedIndex()===1 ||
-              this.pickedPieceUnicode===pieces.W_PAWN && this.getPickedIndex()===8){
-          this.resetPickedData()
-        }
-      },
-
-      isLegalPieceClicked(index, letter, event){
-        if(this.isCurrentTurn(index,letter)){
-          return !(event.target.firstChild.innerText === '' && !this.isPicked)
-        }
-        else{
-          return false
-        }
+      movePieceTo(index, letter){
+        this.piecesLocations[index+letter] = this.pickedPieceUnicode
+        delete this.piecesLocations[this.pickedPieceLocation]
       },
 
       isClickSamePieceAgain(index, letter){
         return this.isPicked &&
-                index===this.getPickedIndex() &&
-                letter===this.getPickedLetter()
+                index===this.pickedIndex &&
+                letter===this.pickedLetter
       },
 
       resetPickedData(){
@@ -97,31 +93,31 @@
         this.isPicked = false
       },
 
-      turnChange(){
+      switchTurn(){
         this.turn = this.turn===WHITE? BLACK : WHITE
       },
 
-      notOverrideSameColor(index, letter){
-        return (this.turn === WHITE && !this.isWhite(this.piecesLocations[index+letter])) ||
-                (this.turn === BLACK && !this.isBlack(this.piecesLocations[index+letter]))
+      notOverrideSameColor(targetPiece){
+        return (this.turn === WHITE && !this.isWhite(targetPiece)) ||
+                (this.turn === BLACK && !this.isBlack(targetPiece))
       },
 
       isBlack(piece){
         return piece === pieces.B_KING || piece === pieces.B_QUEEN || piece === pieces.B_PAWN ||
-          piece === pieces.B_ROOK || piece === pieces.B_BISHOP || piece === pieces.B_KNIGHT
+                piece === pieces.B_ROOK || piece === pieces.B_BISHOP || piece === pieces.B_KNIGHT
       },
       isWhite(piece){
         return piece === pieces.W_KING || piece === pieces.W_QUEEN || piece === pieces.W_PAWN ||
-          piece === pieces.W_ROOK || piece === pieces.W_BISHOP || piece === pieces.W_KNIGHT
+                piece === pieces.W_ROOK || piece === pieces.W_BISHOP || piece === pieces.W_KNIGHT
       },
 
-      isCurrentTurn(index,letter){
-        return (this.turn === BLACK && this.isBlack(this.piecesLocations[index+letter])) ||
-                (this.turn === WHITE && this.isWhite(this.piecesLocations[index+letter]))
+      isCurrentTurn(piece){
+        return (this.turn === BLACK && this.isBlack(piece)) ||
+                (this.turn === WHITE && this.isWhite(piece))
       },
 
       isLegalMovement(destIndex, destLetter){
-        if(this.notOverrideSameColor(destIndex,destLetter)) {
+        if(this.notOverrideSameColor(this.piecesLocations[destIndex+destLetter])) {
           switch (this.pickedPieceUnicode) {
             case pieces.W_PAWN:
             case pieces.B_PAWN:
@@ -141,42 +137,27 @@
             case pieces.W_KING:
             case pieces.B_KING:
               return this.kingIsLegalMove(destIndex, destLetter)
-            default:
-              console.error("Error - legal check without match piece !")
-              return false
           }
         }
       },
 
-      getPickedIndex(){
-        return parseInt(this.pickedPieceLocation.charAt(0))
-      },
-      getPickedLetter(){
-        return this.pickedPieceLocation.charAt(1)
-      },
-
       // All legal movements
       pawnIsLegalMove(destIndex, destLetter){
-        let pickedIndex = this.getPickedIndex()
-        let pickedLetter = this.getPickedLetter()
-
-        if(pickedLetter !== destLetter){
-          return false
+        if(this.isVerticalMove(destLetter) && this.isWayFreeVertical(destIndex)) {
+          if (this.turn === WHITE) {
+            return this.pickedIndex + 1 === destIndex || this.pickedIndex + 2 === destIndex
+          }
+          else {// Black turn
+            return this.pickedIndex - 1 === destIndex || this.pickedIndex - 2 === destIndex
+          }
         }
-        if(this.turn === WHITE){
-          let nextSquare = (pickedIndex+1)+pickedLetter
-          return pickedIndex+1 === destIndex || (pickedIndex+2 === destIndex && this.piecesLocations[nextSquare]===undefined )
-        }
-        else {// Black turn
-          let prevSquare = (pickedIndex-1)+pickedLetter
-          return pickedIndex-1 === destIndex || (pickedIndex-2 === destIndex && this.piecesLocations[prevSquare]===undefined)
-        }
+        return false
       },
 
       queenIsLegalMove(destIndex, destLetter){
         return this.isLegalVertically(destIndex, destLetter, 2) ||
                 this.isLegalHorizontally(destIndex, destLetter, 2) ||
-                 this.isLegalDiagonally(destIndex, destLetter, 2)
+                this.isLegalDiagonally(destIndex, destLetter, 2)
       },
 
       rookIsLegalMove(destIndex,destLetter){
@@ -196,12 +177,10 @@
 
       // ♞
       knightIsLegalMove(destIndex,destLetter){
-        let pickedIndex = this.getPickedIndex()
         let destLetterIndex = letters.indexOf(destLetter)
-        let pickedLetterIndex = letters.indexOf(this.getPickedLetter())
 
-        let lettersMovement = Math.abs(destLetterIndex - pickedLetterIndex)
-        let numbersMovement = Math.abs(destIndex - pickedIndex)
+        let lettersMovement = Math.abs(destLetterIndex - this.pickedLetterIndex)
+        let numbersMovement = Math.abs(destIndex - this.pickedIndex)
 
         return (lettersMovement===1 && numbersMovement===2) ||
                 (lettersMovement===2 && numbersMovement===1)
@@ -209,79 +188,90 @@
 
       // VERTICAL
       isLegalVertically(destIndex, destLetter, stepsAllowed){
-        if(this.isVerticallyMove(destLetter)) {
-          let pickedIndex = this.getPickedIndex()
-          let verticalFree = this.isWayFreeVertical(destIndex, pickedIndex)
-          return Math.abs(pickedIndex - destIndex) <= stepsAllowed && verticalFree
+        if(this.isVerticalMove(destLetter)) {
+          let isAllowedRange = Math.abs(this.pickedIndex - destIndex) <= stepsAllowed
+          return isAllowedRange && this.isWayFreeVertical(destIndex)
         }
         return false
       },
-      isWayFreeVertical(destIndex, pickedIndex){
-        for(let i = Math.min(destIndex, pickedIndex)+1; i < Math.max(destIndex, pickedIndex); i++){
-          if(this.piecesLocations[i+this.getPickedLetter()] !== undefined){
+      isWayFreeVertical(destIndex){
+        let minIndex = Math.min(destIndex, this.pickedIndex)
+        let maxIndex = Math.max(destIndex, this.pickedIndex)
+        for(let i = minIndex+1; i < maxIndex; i++){
+          if(this.piecesLocations[i+this.pickedLetter] !== undefined){
             return false
           }
         }
         return true
       },
-      isVerticallyMove(destLetter){
-        return destLetter === this.getPickedLetter()
+      isVerticalMove(destLetter){
+        return destLetter === this.pickedLetter
       },
 
       // HORIZONTAL
       isLegalHorizontally(destIndex, destLetter, stepsAllowed){
-        if(this.isHorizontallyMove(destIndex)) {
+        if(this.isHorizontalMove(destIndex)) {
           let destLetterIndex = letters.indexOf(destLetter)
-          let pickedLetterIndex = letters.indexOf(this.getPickedLetter())
-
-          let isAllowedRange = Math.abs(destLetterIndex - pickedLetterIndex) <= stepsAllowed
-          if(isAllowedRange) {
-            return this.isWayFreeHorizontal(destLetterIndex, pickedLetterIndex)
-          }
+          let isAllowedRange = Math.abs(destLetterIndex - this.pickedLetterIndex) <= stepsAllowed
+          return isAllowedRange && this.isWayFreeHorizontal(destLetterIndex)
         }
         return false
       },
-      isWayFreeHorizontal(destLetterIndex, pickedLetterIndex){
-        for(let i = Math.min(destLetterIndex, pickedLetterIndex)+1; i < Math.max(destLetterIndex, pickedLetterIndex); i++){
-          if(this.piecesLocations[this.getPickedIndex()+letters[i]] !== undefined){
+      isWayFreeHorizontal(destLetterIndex){
+        let minLetter = Math.min(destLetterIndex, this.pickedLetterIndex)
+        let maxLetter = Math.max(destLetterIndex, this.pickedLetterIndex)
+        for(let i = minLetter+1; i < maxLetter; i++){
+          if(this.piecesLocations[this.pickedIndex+letters[i]] !== undefined){
             return false
           }
         }
         return true
       },
-      isHorizontallyMove(destIndex){
-        return destIndex === this.getPickedIndex()
+      isHorizontalMove(destIndex){
+        return destIndex === this.pickedIndex
       },
 
       // DIAGONAL
       isLegalDiagonally(destIndex, destLetter, stepsAllowed){
-        let pickedIndex = this.getPickedIndex()
         let destLetterIndex = letters.indexOf(destLetter)
-        let pickedLetterIndex = letters.indexOf(this.getPickedLetter())
-
-        let isAllowedRange = Math.abs(destIndex-pickedIndex)<=stepsAllowed
-        if(isAllowedRange) {
-          let isDiagonal = Math.abs(destIndex - pickedIndex) === Math.abs(destLetterIndex - pickedLetterIndex)
-          if (isDiagonal) {
-            return this.isWayFreeDiagonal(destIndex, pickedIndex, destLetterIndex, pickedLetterIndex)
+        if(this.isDiagonalMove(destIndex, destLetterIndex)) {
+          let isAllowedRange = Math.abs(destIndex - this.pickedIndex) <= stepsAllowed
+          if (isAllowedRange) {
+            return this.isWayFreeDiagonal(destIndex, destLetterIndex)
           }
         }
         return false
       },
-      isWayFreeDiagonal(destIndex, pickedIndex, destLetterIndex, pickedLetterIndex){
-        let firstIndex = Math.min(destIndex, pickedIndex)+1
-        let firstLetter = Math.min(destLetterIndex, pickedLetterIndex)+1
+      isDiagonalMove(destIndex, destLetterIndex){
+        return Math.abs(destIndex - this.pickedIndex) === Math.abs(destLetterIndex - this.pickedLetterIndex)
+      },
+      isWayFreeDiagonal(destIndex, destLetterIndex){
+        let increaseAccordingly = this.isSecondaryDiagonal(destIndex, destLetterIndex)
+        let minLetterToCheck = Math.min(destLetterIndex, this.pickedLetterIndex)+1
+        let maxLetterToCheck = Math.max(destLetterIndex, this.pickedLetterIndex)-1
+        let maxIndexToCheck = Math.max(destIndex, this.pickedIndex)
 
-        for(let i=firstIndex, j=firstLetter; i < Math.max(destIndex, pickedIndex); i++, j++){
-          if(this.piecesLocations[i+letters[j]] !== undefined){
+        let indexToCheck = Math.min(destIndex, this.pickedIndex)+1
+        let letterToCheck = increaseAccordingly? minLetterToCheck : maxLetterToCheck
+
+        while(indexToCheck < maxIndexToCheck){
+          if(this.piecesLocations[indexToCheck+letters[letterToCheck]] !== undefined){
             return false
           }
+          indexToCheck++
+          increaseAccordingly? letterToCheck++ : letterToCheck--
         }
+
         return true
       },
 
+      isSecondaryDiagonal(destIndex, destLetterIndex){
+        return (destIndex > this.pickedIndex && destLetterIndex > this.pickedLetterIndex) ||
+                (destIndex < this.pickedIndex && destLetterIndex < this.pickedLetterIndex)
+      },
+
       initBoard(){
-        let allPieces = {
+        let allPiecesLocations = {
           //Whites
           '1e': pieces.W_KING,
           '1d': pieces.W_QUEEN,
@@ -302,18 +292,18 @@
             let whiteLocation = '2'+letter
             let blackLocation = '7'+letter
 
-            allPieces[whiteLocation] = pieces.W_PAWN
-            allPieces[blackLocation] = pieces.B_PAWN
+            allPiecesLocations[whiteLocation] = pieces.W_PAWN
+            allPiecesLocations[blackLocation] = pieces.B_PAWN
           }
         )
 
-        this.piecesLocations = allPieces
+        this.piecesLocations = allPiecesLocations
       },
 
       restartGame(){
-        this.initBoard()
         this.turn = WHITE
         this.resetPickedData()
+        this.initBoard()
       }
     },
 
