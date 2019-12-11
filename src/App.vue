@@ -1,37 +1,32 @@
 <template>
     <div id="app">
-        <div class="header-container">
-            <button @click="restartGame">Restart Game</button>
-            <span class="pipe"></span>
-            Current Turn  <div :style="{backgroundColor: this.turn}" class="turn-sign"></div>
-        </div>
-        <Board :letters="letters"
-               :numbers="numbers"
-               :pieces="piecesLocations"
+        <Header :restart-game="this.restartGame" :turn="this.turn"/>
+
+        <Board :piecesLocations="piecesLocations"
                :picked-cell="pickedPieceLocation"
-               @cell-clicked="clickCellHandle"
-               id="game-board"/>
+               @cell-clicked="clickCellHandle"/>
     </div>
 </template>
 
 <script>
-  import Board from './components/Board.vue'
-  import { pieces } from "./constants"
+  import Board from './components/Board'
+  import Header from './components/Header'
+  import { pieces, letters } from "./constants"
   import Vue from "vue"
 
-  let WHITE = "white"
-  let BLACK = "black"
+  const WHITE = "white"
+  const BLACK = "black"
+  const maxMove = letters.length
 
   export default {
     name: 'app',
     components: {
+      Header,
       Board,
     },
 
     data(){
       return {
-        letters : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
-        numbers : [8,7,6,5,4,3,2,1],
         piecesLocations: {},
         turn: WHITE,
         isPicked: false,
@@ -40,15 +35,9 @@
       }
     },
 
-    computed:{
-      maxMove(){
-        return this.numbers.length
-      }
-    },
-
     methods:{
       clickCellHandle({index, letter}, event){
-        if(this.isPicked && this.isClickSamePieceAgain(index,letter)){
+        if(this.isClickSamePieceAgain(index,letter)){
           this.resetPickedData()
         }
         else if(this.isPicked && this.isLegalMovement(index, letter)){
@@ -97,7 +86,9 @@
       },
 
       isClickSamePieceAgain(index, letter){
-        return (index===this.getPickedIndex() && letter===this.getPickedLetter())
+        return this.isPicked &&
+                index===this.getPickedIndex() &&
+                letter===this.getPickedLetter()
       },
 
       resetPickedData(){
@@ -107,12 +98,7 @@
       },
 
       turnChange(){
-        if(this.turn === WHITE){
-          this.turn = BLACK
-        }
-        else{
-          this.turn = WHITE
-        }
+        this.turn = this.turn===WHITE? BLACK : WHITE
       },
 
       notOverrideSameColor(index, letter){
@@ -194,25 +180,25 @@
       },
 
       rookIsLegalMove(destIndex,destLetter){
-        return this.isLegalDiagonally(destIndex, destLetter, this.maxMove)
+        return this.isLegalDiagonally(destIndex, destLetter, maxMove)
       },
 
       bishopIsLegalMove(destIndex,destLetter){
-        return this.isLegalDiagonally(destIndex, destLetter, this.maxMove) ||
-                this.isLegalVertically(destIndex, destLetter, this.maxMove)
+        return this.isLegalDiagonally(destIndex, destLetter, maxMove) ||
+                this.isLegalVertically(destIndex, destLetter, maxMove)
       },
 
       // ♚
       kingIsLegalMove(destIndex,destLetter){
-        return this.isLegalVertically(destIndex, destLetter, this.maxMove) ||
-                this.isLegalHorizontally(destIndex, destLetter, this.maxMove)
+        return this.isLegalVertically(destIndex, destLetter, maxMove) ||
+                this.isLegalHorizontally(destIndex, destLetter, maxMove)
       },
 
       // ♞
       knightIsLegalMove(destIndex,destLetter){
         let pickedIndex = this.getPickedIndex()
-        let destLetterIndex = this.letters.indexOf(destLetter)
-        let pickedLetterIndex = this.letters.indexOf(this.getPickedLetter())
+        let destLetterIndex = letters.indexOf(destLetter)
+        let pickedLetterIndex = letters.indexOf(this.getPickedLetter())
 
         let lettersMovement = Math.abs(destLetterIndex - pickedLetterIndex)
         let numbersMovement = Math.abs(destIndex - pickedIndex)
@@ -245,8 +231,8 @@
       // HORIZONTAL
       isLegalHorizontally(destIndex, destLetter, stepsAllowed){
         if(this.isHorizontallyMove(destIndex)) {
-          let destLetterIndex = this.letters.indexOf(destLetter)
-          let pickedLetterIndex = this.letters.indexOf(this.getPickedLetter())
+          let destLetterIndex = letters.indexOf(destLetter)
+          let pickedLetterIndex = letters.indexOf(this.getPickedLetter())
 
           let isAllowedRange = Math.abs(destLetterIndex - pickedLetterIndex) <= stepsAllowed
           if(isAllowedRange) {
@@ -257,7 +243,7 @@
       },
       isWayFreeHorizontal(destLetterIndex, pickedLetterIndex){
         for(let i = Math.min(destLetterIndex, pickedLetterIndex)+1; i < Math.max(destLetterIndex, pickedLetterIndex); i++){
-          if(this.piecesLocations[this.getPickedIndex()+this.letters[i]] !== undefined){
+          if(this.piecesLocations[this.getPickedIndex()+letters[i]] !== undefined){
             return false
           }
         }
@@ -270,8 +256,8 @@
       // DIAGONAL
       isLegalDiagonally(destIndex, destLetter, stepsAllowed){
         let pickedIndex = this.getPickedIndex()
-        let destLetterIndex = this.letters.indexOf(destLetter)
-        let pickedLetterIndex = this.letters.indexOf(this.getPickedLetter())
+        let destLetterIndex = letters.indexOf(destLetter)
+        let pickedLetterIndex = letters.indexOf(this.getPickedLetter())
 
         let isAllowedRange = Math.abs(destIndex-pickedIndex)<=stepsAllowed
         if(isAllowedRange) {
@@ -287,7 +273,7 @@
         let firstLetter = Math.min(destLetterIndex, pickedLetterIndex)+1
 
         for(let i=firstIndex, j=firstLetter; i < Math.max(destIndex, pickedIndex); i++, j++){
-          if(this.piecesLocations[i+this.letters[j]] !== undefined){
+          if(this.piecesLocations[i+letters[j]] !== undefined){
             return false
           }
         }
@@ -312,7 +298,7 @@
 
         }
         // init all Pawns
-        this.letters.forEach((letter)=>{
+        letters.forEach((letter)=>{
             let whiteLocation = '2'+letter
             let blackLocation = '7'+letter
 
@@ -345,40 +331,5 @@
         text-align: center;
         color: #862e11;
         margin-top: 30px;
-
-        .header-container {
-            margin-bottom: 10px;
-            color: black;
-            button {
-                background-color: transparent;
-                border-radius: 5px;
-                font-size: inherit;
-                padding: 4px 10px;
-            }
-
-            .pipe {
-                border: 0.5px solid rgba(128, 128, 128, 0.75);
-                margin: 0 4px 0 13px;
-                padding: 7px 0 9px 0;
-
-            }
-
-            .turn-sign {
-                display: inline-block;
-                height: 20px;
-                width: 20px;
-                /*border: solid 1px black;*/
-                border-radius: 100px;
-                margin-bottom: -5px;
-
-                border: 2px outset buttonface;
-                border-image: initial;
-            }
-        }
     }
-
-    #game-board{
-
-    }
-
 </style>

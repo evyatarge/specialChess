@@ -12,7 +12,7 @@
                           :style="{border: pickedCell===(index+letter)? '1px solid red' : 'transparent'}"
                           @click="cellClicked({index, letter}, $event)">
                         <span class="cell-content">
-                            {{ pieces[index+letter] !== undefined ? pieces[index+letter] : ''}}
+                            {{ piecesLocations[index+letter] !== undefined ? piecesLocations[index+letter] : ''}}
                         </span>
                     </span>
                 </div>
@@ -24,21 +24,25 @@
 </template>
 
 <script>
+
+  import { letters, numbers } from "../constants"
+
   export default {
     name: "Board",
     props:{
-      pieces:{
+      piecesLocations:{
         type: Object,
-      },
-      letters: {
-        type: Array,
-      },
-      numbers: {
-        type: Array,
       },
       pickedCell: {
         type: String,
       },
+    },
+
+    data(){
+      return{
+        letters: letters,
+        numbers: numbers,
+      }
     },
 
     methods: {
