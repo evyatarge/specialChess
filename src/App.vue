@@ -2,6 +2,8 @@
     <div id="app">
         <Header :restart-game="this.restartGame" :turn="this.turn"/>
 
+        <div class="warnings-info" :style="warningMessageStyleObj">{{ warningMessage }}</div>
+
         <Board :piecesLocations="piecesLocations"
                :picked-cell="pickedPieceLocation"
                @cell-clicked="clickCellHandle"/>
@@ -30,6 +32,8 @@
         isPicked: false,
         pickedPieceUnicode: '',
         pickedPieceLocation: '',
+        warningMessage:'This is not a legal movement',
+        warningMessageStyleObj: { display: 'none' },
       }
     },
 
@@ -74,12 +78,17 @@
 
       putDownPickedPiece(index, letter){
         if(this.isLegalMovement(index, letter)) {
+          this.warningMessageStyleObj.display = 'none'
           if (!this.doesMoveEndTheGame(this.piecesLocations[index + letter])) {
             this.movePieceTo(index, letter)
           }
           else {
             this.endGame(index,letter)
           }
+        }
+        else{
+          this.warningMessageStyleObj.display = 'block'
+          setTimeout(()=>{this.warningMessageStyleObj.display = 'none'},4000)
         }
       },
       doesMoveEndTheGame(targetPiece){
@@ -343,4 +352,30 @@
         color: #862e11;
         margin-top: 30px;
     }
+
+    .warnings-info{
+        position: absolute;
+        top: 20px;
+        left: 40%;
+        background-color: rgba(141, 143, 145, 0.43);
+        height: 30px;
+        width: 300px;
+        font-size: x-large;
+        font-weight: 600;
+        padding: 30px;
+        opacity: 90%;
+        color: red;
+
+        -webkit-animation: fadeinout 3s linear forwards;
+        animation: fadeinout 3s linear forwards;
+    }
+    @-webkit-keyframes fadeinout {
+        0%,100% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    @keyframes fadeinout {
+        0%,100% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
 </style>
