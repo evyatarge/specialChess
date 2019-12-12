@@ -2,6 +2,7 @@
     <div id="app">
         <div class="warnings-info" v-show="warningMessageVisible" @mouseover="warningMessageVisible=false">{{ warningMessage }}</div>
         <Header :restart-game="this.restartGame" :turn="this.turn"/>
+
         <Board :piecesLocations="piecesLocations"
                :picked-cell="pickedPieceLocation"
                @cell-clicked="clickCellHandle"/>
