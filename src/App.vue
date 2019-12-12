@@ -1,7 +1,7 @@
 <template>
     <div id="app">
+        <div class="warnings-info" v-show="warningMessageVisible" @mouseover="warningMessageVisible=false">{{ warningMessage }}</div>
         <Header :restart-game="this.restartGame" :turn="this.turn"/>
-
         <Board :piecesLocations="piecesLocations"
                :picked-cell="pickedPieceLocation"
                @cell-clicked="clickCellHandle"/>
@@ -30,6 +30,8 @@
         isPicked: false,
         pickedPieceUnicode: '',
         pickedPieceLocation: '',
+        warningMessage:'This is not a legal movement',
+        warningMessageVisible: false,
       }
     },
 
@@ -74,12 +76,16 @@
 
       putDownPickedPiece(index, letter){
         if(this.isLegalMovement(index, letter)) {
+          this.warningMessageVisible = false
           if (!this.doesMoveEndTheGame(this.piecesLocations[index + letter])) {
             this.movePieceTo(index, letter)
           }
           else {
             this.endGame(index,letter)
           }
+        }
+        else{
+          this.warningMessageVisible = true
         }
       },
       doesMoveEndTheGame(targetPiece){
@@ -343,4 +349,23 @@
         color: #862e11;
         margin-top: 30px;
     }
+
+    .warnings-info{
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: x-large;
+        color: red;
+        -webkit-animation: fadeinout 3s linear forwards;
+        animation: fadeinout 3s linear forwards;
+    }
+    @-webkit-keyframes fadeinout {
+        0%,100% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    @keyframes fadeinout {
+        0%,100% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
 </style>
